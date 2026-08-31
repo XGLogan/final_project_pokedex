@@ -24,16 +24,19 @@ export const VIEW_MODES = {
 // Type names returned by the API that have no browsable Pokémon.
 export const EXCLUDED_TYPES = ['unknown', 'shadow', 'stellar'];
 
+// Shared request-failure message (matches the Stage 1 spec wording).
+const REQUEST_ERROR =
+  'Sorry, something went wrong during the request. There may be a connection issue or the server may be down. Please try again later.';
+
 export const ERROR_MESSAGES = {
-  LOAD_FAILED:
-    "We couldn't load Pokémon right now. Please check your connection and try again.",
-  SEARCH_FAILED: 'Something went wrong with your search. Please try again.',
-  NOT_FOUND: 'No Pokémon matches that name or number. Try another search.',
+  LOAD_FAILED: REQUEST_ERROR,
+  SEARCH_FAILED: REQUEST_ERROR,
+  NOT_FOUND: 'Nothing found.',
   TYPES_FAILED: "We couldn't load the type filter, but you can still search and browse.",
 };
 
 export const EMPTY_STATE_MESSAGES = {
-  NO_RESULTS: 'No Pokémon to show. Try a different search or filter.',
+  NO_RESULTS: 'Nothing found.',
   NO_FAVORITES:
     "You haven't saved any Pokémon yet. Tap the heart on a card to add it here.",
 };

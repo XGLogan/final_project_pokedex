@@ -96,7 +96,7 @@ function Home({
                 className="results__load-more button"
                 onClick={onLoadMore}
               >
-                Load more
+                Show more
               </button>
             </div>
           )}
