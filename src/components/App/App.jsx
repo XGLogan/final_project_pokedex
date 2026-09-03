@@ -7,7 +7,10 @@ import Favorites from '../Favorites/Favorites';
 import About from '../About/About';
 import NotFound from '../NotFound/NotFound';
 import PokemonPopup from '../PokemonPopup/PokemonPopup';
+import LoginModal from '../LoginModal/LoginModal';
+import RegisterModal from '../RegisterModal/RegisterModal';
 import useFavorites from '../../hooks/useFavorites';
+import useAuth from '../../hooks/useAuth';
 import {
   getPokemonByName,
   getPokemonByType,
@@ -40,6 +43,8 @@ function App() {
   const [selectedPokemon, setSelectedPokemon] = useState(null);
 
   const { favorites, isFavorite, toggleFavorite } = useFavorites();
+  const { currentUser, isLoggedIn, register, login, signOut } = useAuth();
+  const [activeModal, setActiveModal] = useState('');
 
   // Tracks the most recent request so stale responses can be ignored.
   const requestIdRef = useRef(0);
@@ -248,9 +253,36 @@ function App() {
     setSelectedPokemon(null);
   }, []);
 
+  const handleOpenLogin = useCallback(() => setActiveModal('login'), []);
+  const handleOpenRegister = useCallback(() => setActiveModal('register'), []);
+  const handleCloseModal = useCallback(() => setActiveModal(''), []);
+
+  const handleLogin = useCallback(
+    (credentials) => {
+      login(credentials);
+      setActiveModal('');
+    },
+    [login],
+  );
+
+  const handleRegister = useCallback(
+    (formValues) => {
+      register(formValues);
+      setActiveModal('');
+    },
+    [register],
+  );
+
   return (
     <div className="page">
-      <Header favoritesCount={favorites.length} />
+      <Header
+        favoritesCount={favorites.length}
+        isLoggedIn={isLoggedIn}
+        currentUser={currentUser}
+        onSignInClick={handleOpenLogin}
+        onSignUpClick={handleOpenRegister}
+        onSignOut={signOut}
+      />
       <main className="page__content">
         <Routes>
           <Route
@@ -300,6 +332,20 @@ function App() {
         isFavorite={isFavorite}
         onToggleFavorite={toggleFavorite}
       />
+      {activeModal === 'login' && (
+        <LoginModal
+          onClose={handleCloseModal}
+          onLogin={handleLogin}
+          onSwitchToRegister={handleOpenRegister}
+        />
+      )}
+      {activeModal === 'register' && (
+        <RegisterModal
+          onClose={handleCloseModal}
+          onRegister={handleRegister}
+          onSwitchToLogin={handleOpenLogin}
+        />
+      )}
     </div>
   );
 }

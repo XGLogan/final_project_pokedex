@@ -2,7 +2,14 @@ import { NavLink } from 'react-router-dom';
 import logo from '../../images/pokeball.svg';
 import './Header.css';
 
-function Header({ favoritesCount }) {
+function Header({
+  favoritesCount,
+  isLoggedIn,
+  currentUser,
+  onSignInClick,
+  onSignUpClick,
+  onSignOut,
+}) {
   function buildLinkClassName({ isActive }) {
     return `header__link ${isActive ? 'header__link_active' : ''}`;
   }
@@ -14,6 +21,7 @@ function Header({ favoritesCount }) {
           <img src={logo} alt="" aria-hidden="true" className="header__logo" />
           <span className="header__title">Pokédex Explorer</span>
         </NavLink>
+
         <nav className="header__nav" aria-label="Main navigation">
           <NavLink to="/" end className={buildLinkClassName}>
             Home
@@ -36,6 +44,38 @@ function Header({ favoritesCount }) {
             About
           </NavLink>
         </nav>
+
+        <div className="header__auth">
+          {isLoggedIn ? (
+            <>
+              <span className="header__greeting">Hi, {currentUser.name}</span>
+              <button
+                type="button"
+                className="header__auth-button header__auth-button_outline"
+                onClick={onSignOut}
+              >
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="header__auth-button header__auth-button_outline"
+                onClick={onSignInClick}
+              >
+                Sign in
+              </button>
+              <button
+                type="button"
+                className="header__auth-button header__auth-button_solid"
+                onClick={onSignUpClick}
+              >
+                Sign up
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );

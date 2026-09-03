@@ -8,6 +8,18 @@ export const OFFICIAL_ARTWORK_KEY = 'official-artwork';
 
 export const FAVORITES_STORAGE_KEY = 'pokedex-explorer.favorites';
 
+export const CURRENT_USER_STORAGE_KEY = 'pokedex-explorer.currentUser';
+
+export const USERS_STORAGE_KEY = 'pokedex-explorer.users';
+
+export const MIN_PASSWORD_LENGTH = 6;
+
+export const AUTH_MESSAGES = {
+  INVALID_EMAIL: 'Enter a valid email address.',
+  SHORT_PASSWORD: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
+  MISSING_NAME: 'Enter your name.',
+};
+
 export const POKEAPI_HOMEPAGE = 'https://pokeapi.co/';
 
 export const GITHUB_URL = 'https://github.com/ocplogan';
