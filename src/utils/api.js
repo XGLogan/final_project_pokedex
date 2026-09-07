@@ -31,3 +31,10 @@ export function getTypes() {
 export function getPokemonByType(type) {
   return fetch(`${BASE_URL}/type/${type}`).then(checkResponse);
 }
+
+// The species record for a Pokémon, whose `varieties` list its alternate forms
+// (mega, origin, regional, etc.).
+export function getPokemonSpecies(nameOrId) {
+  const query = String(nameOrId).trim().toLowerCase();
+  return fetch(`${BASE_URL}/pokemon-species/${query}`).then(checkResponse);
+}

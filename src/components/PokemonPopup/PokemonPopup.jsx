@@ -7,7 +7,7 @@ import heartFilledIcon from '../../images/heart-filled.svg';
 import placeholderImage from '../../images/pokeball.svg';
 import './PokemonPopup.css';
 
-function PokemonPopup({ pokemon, onClose, isFavorite, onToggleFavorite }) {
+function PokemonPopup({ pokemon, forms, onSelectForm, onClose, isFavorite, onToggleFavorite }) {
   const isOpen = Boolean(pokemon);
   const closeButtonRef = useRef(null);
   const previousFocusRef = useRef(null);
@@ -104,6 +104,24 @@ function PokemonPopup({ pokemon, onClose, isFavorite, onToggleFavorite }) {
               </li>
             ))}
           </ul>
+
+          {forms.length > 1 && (
+            <div className="popup__forms" role="group" aria-label="Choose a form">
+              {forms.map((form) => (
+                <button
+                  key={form.name}
+                  type="button"
+                  className={`popup__form ${
+                    form.name === pokemon.name ? 'popup__form_active' : ''
+                  }`}
+                  onClick={() => onSelectForm(form.name)}
+                  aria-pressed={form.name === pokemon.name}
+                >
+                  {form.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="popup__content">

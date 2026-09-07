@@ -10,6 +10,7 @@ export function normalizePokemon(raw) {
   return {
     id: raw.id,
     name: raw.name,
+    speciesName: raw.species?.name || raw.name,
     imageUrl: officialArtwork || defaultSprite || '',
     types: raw.types.map((entry) => entry.type.name),
     heightInMeters: raw.height / 10, // decimetres -> metres
@@ -41,4 +42,16 @@ export function formatName(name) {
     .split('-')
     .map((part) => capitalize(part))
     .join(' ');
+}
+
+// A short label for a form-switch button, e.g. "rayquaza-mega" -> "Mega",
+// "giratina-origin" -> "Origin", and the base variety -> "Base".
+export function formLabel(varietyName, speciesName) {
+  if (varietyName === speciesName) {
+    return 'Base';
+  }
+  const stripped = varietyName.startsWith(`${speciesName}-`)
+    ? varietyName.slice(speciesName.length + 1)
+    : varietyName;
+  return formatName(stripped);
 }

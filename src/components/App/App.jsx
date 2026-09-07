@@ -15,9 +15,10 @@ import {
   getPokemonByName,
   getPokemonByType,
   getPokemonPage,
+  getPokemonSpecies,
   getTypes,
 } from '../../utils/api';
-import { normalizePokemon } from '../../utils/pokemon';
+import { formLabel, normalizePokemon } from '../../utils/pokemon';
 import {
   ERROR_MESSAGES,
   EXCLUDED_TYPES,
@@ -41,6 +42,7 @@ function App() {
   const [types, setTypes] = useState([]);
   const [typesError, setTypesError] = useState('');
   const [selectedPokemon, setSelectedPokemon] = useState(null);
+  const [forms, setForms] = useState([]);
 
   const { currentUser, isLoggedIn, register, login, signOut } = useAuth();
   const { favorites, isFavorite, toggleFavorite } = useFavorites(
@@ -50,6 +52,8 @@ function App() {
 
   // Tracks the most recent request so stale responses can be ignored.
   const requestIdRef = useRef(0);
+  // Separate token for popup/form requests.
+  const popupRequestIdRef = useRef(0);
 
   // Fetch details for a list of names. A single failed detail is skipped
   // rather than discarding the whole page.
@@ -248,11 +252,52 @@ function App() {
   }
 
   const handleCardClick = useCallback((pokemon) => {
+    const requestId = popupRequestIdRef.current + 1;
+    popupRequestIdRef.current = requestId;
     setSelectedPokemon(pokemon);
+    setForms([]);
+
+    // Look up the species to see if it has alternate forms (mega, origin, etc.).
+    getPokemonSpecies(pokemon.speciesName)
+      .then((species) => {
+        if (requestId !== popupRequestIdRef.current) {
+          return;
+        }
+        const varieties = species.varieties || [];
+        setForms(
+          varieties.length > 1
+            ? varieties.map((variety) => ({
+                name: variety.pokemon.name,
+                label: formLabel(variety.pokemon.name, species.name),
+              }))
+            : [],
+        );
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, []);
+
+  const handleSelectForm = useCallback((varietyName) => {
+    const requestId = popupRequestIdRef.current + 1;
+    popupRequestIdRef.current = requestId;
+
+    getPokemonByName(varietyName)
+      .then((raw) => {
+        if (requestId !== popupRequestIdRef.current) {
+          return;
+        }
+        setSelectedPokemon(normalizePokemon(raw));
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }, []);
 
   const handleClosePopup = useCallback(() => {
+    popupRequestIdRef.current += 1;
     setSelectedPokemon(null);
+    setForms([]);
   }, []);
 
   const handleOpenLogin = useCallback(() => setActiveModal('login'), []);
@@ -344,6 +389,8 @@ function App() {
       <Footer />
       <PokemonPopup
         pokemon={selectedPokemon}
+        forms={forms}
+        onSelectForm={handleSelectForm}
         onClose={handleClosePopup}
         isFavorite={isFavorite}
         onToggleFavorite={handleToggleFavorite}
