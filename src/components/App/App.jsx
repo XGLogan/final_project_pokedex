@@ -12,33 +12,45 @@ import RegisterModal from '../RegisterModal/RegisterModal';
 import useFavorites from '../../hooks/useFavorites';
 import useAuth from '../../hooks/useAuth';
 import {
+  getAllPokemon,
   getPokemonByName,
   getPokemonByType,
-  getPokemonPage,
   getPokemonSpecies,
   getTypes,
 } from '../../utils/api';
-import { formLabel, normalizePokemon } from '../../utils/pokemon';
+import { formLabel, idFromUrl, normalizePokemon } from '../../utils/pokemon';
 import {
   ERROR_MESSAGES,
   EXCLUDED_TYPES,
+  FORM_ID_THRESHOLD,
+  GENERATIONS,
   PAGE_SIZE,
   VIEW_MODES,
 } from '../../utils/constants';
 import './App.css';
 
+// Keep only default Pokédex entries (no alternate forms), ordered by number.
+function toDefaultEntries(items) {
+  return items
+    .map((item) => ({ name: item.name, id: idFromUrl(item.url) }))
+    .filter((entry) => entry.id > 0 && entry.id < FORM_ID_THRESHOLD)
+    .sort((first, second) => first.id - second.id);
+}
+
 function App() {
+  // The full list of default Pokémon (name + id), loaded once on mount.
+  const [allPokemon, setAllPokemon] = useState([]);
+  // The entries for the current view; the grid loads them PAGE_SIZE at a time.
+  const [pool, setPool] = useState([]);
+  const [loadedCount, setLoadedCount] = useState(0);
   const [pokemons, setPokemons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [browseOffset, setBrowseOffset] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
   const [mode, setMode] = useState(VIEW_MODES.BROWSE);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeType, setActiveType] = useState('');
-  const [typePool, setTypePool] = useState([]);
-  const [typeLoadedCount, setTypeLoadedCount] = useState(0);
+  const [activeGeneration, setActiveGeneration] = useState('');
   const [types, setTypes] = useState([]);
   const [typesError, setTypesError] = useState('');
   const [selectedPokemon, setSelectedPokemon] = useState(null);
@@ -50,41 +62,42 @@ function App() {
   );
   const [activeModal, setActiveModal] = useState('');
 
-  // Tracks the most recent request so stale responses can be ignored.
+  const hasMore = pool.length > loadedCount;
+
+  // Tracks the most recent grid request so stale responses can be ignored.
   const requestIdRef = useRef(0);
   // Separate token for popup/form requests.
   const popupRequestIdRef = useRef(0);
 
-  // Fetch details for a list of names. A single failed detail is skipped
+  // Fetch details for a list of entries. A single failed detail is skipped
   // rather than discarding the whole page.
-  const loadDetailsForNames = useCallback(
-    (names) =>
+  const loadDetailsFor = useCallback(
+    (entries) =>
       Promise.all(
-        names.map((name) => getPokemonByName(name).catch(() => null)),
+        entries.map((entry) => getPokemonByName(entry.name).catch(() => null)),
       ).then((rawList) => rawList.filter(Boolean).map(normalizePokemon)),
     [],
   );
 
-  // Load a page of the browse grid, optionally replacing the current results.
-  const loadBrowse = useCallback(
-    (offset, shouldReset) => {
+  // Replace the grid with the first page of a new pool of entries.
+  const showPool = useCallback(
+    (nextPool) => {
       const requestId = requestIdRef.current + 1;
       requestIdRef.current = requestId;
+      setPool(nextPool);
+      setLoadedCount(0);
+      setPokemons([]);
+      setIsLoading(true);
+      setErrorMessage('');
 
-      getPokemonPage(offset)
-        .then((page) =>
-          loadDetailsForNames(page.results.map((item) => item.name)).then((detailed) => ({
-            detailed,
-            hasNext: Boolean(page.next),
-          })),
-        )
-        .then(({ detailed, hasNext }) => {
+      const firstPage = nextPool.slice(0, PAGE_SIZE);
+      loadDetailsFor(firstPage)
+        .then((detailed) => {
           if (requestId !== requestIdRef.current) {
             return;
           }
-          setPokemons((previous) => (shouldReset ? detailed : [...previous, ...detailed]));
-          setHasMore(hasNext);
-          setBrowseOffset(offset);
+          setPokemons(detailed);
+          setLoadedCount(firstPage.length);
           setIsLoading(false);
         })
         .catch((error) => {
@@ -96,12 +109,22 @@ function App() {
           setIsLoading(false);
         });
     },
-    [loadDetailsForNames],
+    [loadDetailsFor],
   );
 
-  // Initial browse load plus the type list for the filter (runs once on mount).
+  // Load the Pokémon index and the type list once on mount.
   useEffect(() => {
-    loadBrowse(0, true);
+    getAllPokemon()
+      .then((data) => {
+        const entries = toDefaultEntries(data.results);
+        setAllPokemon(entries);
+        showPool(entries);
+      })
+      .catch((error) => {
+        console.error(error);
+        setErrorMessage(ERROR_MESSAGES.LOAD_FAILED);
+        setIsLoading(false);
+      });
 
     getTypes()
       .then((data) => {
@@ -114,20 +137,19 @@ function App() {
         console.error(error);
         setTypesError(ERROR_MESSAGES.TYPES_FAILED);
       });
-  }, [loadBrowse]);
+  }, [showPool]);
 
-  // Return to the default paginated browse view.
+  // Return to the default browse view.
   const handleClearSearch = useCallback(() => {
     setSearchTerm('');
     setSearchQuery('');
     setActiveType('');
+    setActiveGeneration('');
     setMode(VIEW_MODES.BROWSE);
-    setErrorMessage('');
-    setIsLoading(true);
-    loadBrowse(0, true);
-  }, [loadBrowse]);
+    showPool(allPokemon);
+  }, [allPokemon, showPool]);
 
-  // Search for a single Pokémon by name or id.
+  // Search by name (partial match) or by Pokédex number.
   function handleSearch(query) {
     const trimmedQuery = query.trim();
     if (!trimmedQuery) {
@@ -135,21 +157,39 @@ function App() {
       return;
     }
 
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
+    const normalizedQuery = trimmedQuery.toLowerCase();
     setMode(VIEW_MODES.SEARCH);
     setActiveType('');
+    setActiveGeneration('');
     setSearchQuery(trimmedQuery);
-    setHasMore(false);
+
+    const isNumber = /^\d+$/.test(normalizedQuery);
+    const matches = allPokemon.filter((entry) =>
+      isNumber ? entry.id === Number(normalizedQuery) : entry.name.includes(normalizedQuery),
+    );
+    if (matches.length > 0) {
+      showPool(matches);
+      return;
+    }
+
+    // Fallback for exact slugs the index doesn't list (e.g. "rayquaza-mega").
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    setPool([]);
+    setLoadedCount(0);
+    setPokemons([]);
     setIsLoading(true);
     setErrorMessage('');
 
-    getPokemonByName(trimmedQuery)
+    getPokemonByName(normalizedQuery)
       .then((raw) => {
         if (requestId !== requestIdRef.current) {
           return;
         }
-        setPokemons([normalizePokemon(raw)]);
+        const found = normalizePokemon(raw);
+        setPool([{ id: found.id, name: found.name }]);
+        setLoadedCount(1);
+        setPokemons([found]);
         setIsLoading(false);
       })
       .catch((error) => {
@@ -158,7 +198,6 @@ function App() {
           return;
         }
         const isNotFound = String(error.message).includes('404');
-        setPokemons([]);
         setErrorMessage(isNotFound ? ERROR_MESSAGES.NOT_FOUND : ERROR_MESSAGES.SEARCH_FAILED);
         setIsLoading(false);
       });
@@ -171,32 +210,26 @@ function App() {
       return;
     }
 
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
     setMode(VIEW_MODES.TYPE);
     setActiveType(type);
+    setActiveGeneration('');
     setSearchTerm('');
     setSearchQuery('');
+
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    setPool([]);
+    setLoadedCount(0);
+    setPokemons([]);
     setIsLoading(true);
     setErrorMessage('');
 
     getPokemonByType(type)
       .then((data) => {
-        const names = data.pokemon.map((entry) => entry.pokemon.name);
-        return loadDetailsForNames(names.slice(0, PAGE_SIZE)).then((detailed) => ({
-          detailed,
-          names,
-        }));
-      })
-      .then(({ detailed, names }) => {
         if (requestId !== requestIdRef.current) {
           return;
         }
-        setTypePool(names);
-        setTypeLoadedCount(detailed.length);
-        setPokemons(detailed);
-        setHasMore(names.length > detailed.length);
-        setIsLoading(false);
+        showPool(toDefaultEntries(data.pokemon.map((entry) => entry.pokemon)));
       })
       .catch((error) => {
         console.error(error);
@@ -208,47 +241,57 @@ function App() {
       });
   }
 
-  // Append the next batch of results for the current view.
-  function handleLoadMore() {
-    if (mode === VIEW_MODES.BROWSE) {
-      setIsLoading(true);
-      setErrorMessage('');
-      loadBrowse(browseOffset + PAGE_SIZE, false);
+  // Filter the grid by generation (a Pokédex number range).
+  function handleSelectGeneration(generationId) {
+    if (!generationId) {
+      handleClearSearch();
       return;
     }
 
-    if (mode === VIEW_MODES.TYPE) {
-      const nextNames = typePool.slice(typeLoadedCount, typeLoadedCount + PAGE_SIZE);
-      if (nextNames.length === 0) {
-        setHasMore(false);
-        return;
-      }
-
-      const requestId = requestIdRef.current + 1;
-      requestIdRef.current = requestId;
-      setIsLoading(true);
-      setErrorMessage('');
-
-      loadDetailsForNames(nextNames)
-        .then((detailed) => {
-          if (requestId !== requestIdRef.current) {
-            return;
-          }
-          setPokemons((previous) => [...previous, ...detailed]);
-          const newLoadedCount = typeLoadedCount + detailed.length;
-          setTypeLoadedCount(newLoadedCount);
-          setHasMore(typePool.length > newLoadedCount);
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          console.error(error);
-          if (requestId !== requestIdRef.current) {
-            return;
-          }
-          setErrorMessage(ERROR_MESSAGES.LOAD_FAILED);
-          setIsLoading(false);
-        });
+    const generation = GENERATIONS.find((item) => String(item.id) === String(generationId));
+    if (!generation) {
+      return;
     }
+
+    setMode(VIEW_MODES.GENERATION);
+    setActiveGeneration(String(generation.id));
+    setActiveType('');
+    setSearchTerm('');
+    setSearchQuery('');
+    showPool(
+      allPokemon.filter((entry) => entry.id >= generation.start && entry.id <= generation.end),
+    );
+  }
+
+  // Append the next page of the current pool.
+  function handleLoadMore() {
+    const nextEntries = pool.slice(loadedCount, loadedCount + PAGE_SIZE);
+    if (nextEntries.length === 0) {
+      return;
+    }
+
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    setIsLoading(true);
+    setErrorMessage('');
+
+    loadDetailsFor(nextEntries)
+      .then((detailed) => {
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+        setPokemons((previous) => [...previous, ...detailed]);
+        setLoadedCount(loadedCount + nextEntries.length);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error(error);
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+        setErrorMessage(ERROR_MESSAGES.LOAD_FAILED);
+        setIsLoading(false);
+      });
   }
 
   const handleCardClick = useCallback((pokemon) => {
@@ -357,11 +400,13 @@ function App() {
                 searchTerm={searchTerm}
                 searchQuery={searchQuery}
                 activeType={activeType}
+                activeGeneration={activeGeneration}
                 types={types}
                 onSearchTermChange={setSearchTerm}
                 onSearch={handleSearch}
                 onClearSearch={handleClearSearch}
                 onSelectType={handleSelectType}
+                onSelectGeneration={handleSelectGeneration}
                 onLoadMore={handleLoadMore}
                 onCardClick={handleCardClick}
                 isFavorite={isFavorite}

@@ -23,6 +23,12 @@ export function normalizePokemon(raw) {
   };
 }
 
+// Pull the numeric id out of a PokeAPI resource URL like ".../pokemon/25/".
+export function idFromUrl(url) {
+  const match = String(url).match(/\/(\d+)\/?$/);
+  return match ? Number(match[1]) : 0;
+}
+
 // "#0025" style padded id label.
 export function formatId(id) {
   return `#${String(id).padStart(4, '0')}`;

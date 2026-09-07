@@ -1,7 +1,7 @@
 // All network requests to the third-party PokeAPI live in this file.
 // Requests use the native Fetch API only (no axios / jQuery).
 
-import { BASE_URL, PAGE_SIZE } from './constants';
+import { ALL_POKEMON_LIMIT, BASE_URL } from './constants';
 
 // Shared response handler: the first then() of every request returns res.json().
 function checkResponse(res) {
@@ -11,9 +11,11 @@ function checkResponse(res) {
   return Promise.reject(new Error(`Error ${res.status}: ${res.statusText}`));
 }
 
-// A page of the Pokémon index (names + detail URLs, plus a `next` cursor).
-export function getPokemonPage(offset = 0, limit = PAGE_SIZE) {
-  return fetch(`${BASE_URL}/pokemon?limit=${limit}&offset=${offset}`).then(checkResponse);
+// The full Pokémon index (names + detail URLs) in a single request.
+export function getAllPokemon() {
+  return fetch(`${BASE_URL}/pokemon?limit=${ALL_POKEMON_LIMIT}&offset=0`).then(
+    checkResponse,
+  );
 }
 
 // Full details for a single Pokémon (sprites, types, stats, abilities, size).

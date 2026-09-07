@@ -4,6 +4,25 @@ export const BASE_URL = 'https://pokeapi.co/api/v2';
 
 export const PAGE_SIZE = 24;
 
+// Large enough to fetch the whole Pokémon index in one request.
+export const ALL_POKEMON_LIMIT = 2000;
+
+// PokeAPI numbers alternate forms (megas, regional, totems, caps...) from
+// 10001 upward; everything below is a default Pokédex entry.
+export const FORM_ID_THRESHOLD = 10000;
+
+export const GENERATIONS = [
+  { id: 1, label: 'Gen 1', start: 1, end: 151 },
+  { id: 2, label: 'Gen 2', start: 152, end: 251 },
+  { id: 3, label: 'Gen 3', start: 252, end: 386 },
+  { id: 4, label: 'Gen 4', start: 387, end: 493 },
+  { id: 5, label: 'Gen 5', start: 494, end: 649 },
+  { id: 6, label: 'Gen 6', start: 650, end: 721 },
+  { id: 7, label: 'Gen 7', start: 722, end: 809 },
+  { id: 8, label: 'Gen 8', start: 810, end: 905 },
+  { id: 9, label: 'Gen 9', start: 906, end: 9999 },
+];
+
 export const OFFICIAL_ARTWORK_KEY = 'official-artwork';
 
 export const FAVORITES_STORAGE_KEY = 'pokedex-explorer.favorites';
@@ -31,6 +50,7 @@ export const VIEW_MODES = {
   BROWSE: 'browse',
   SEARCH: 'search',
   TYPE: 'type',
+  GENERATION: 'generation',
 };
 
 // Type names returned by the API that have no browsable Pokémon.

@@ -89,6 +89,13 @@
   background-color: var(--color-primary-dark);
 }
 
+.search-form__filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 24px;
+}
+
 .search-form__filter {
   display: flex;
   flex-wrap: wrap;

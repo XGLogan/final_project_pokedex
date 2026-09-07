@@ -2,7 +2,7 @@ import SearchForm from '../SearchForm/SearchForm';
 import CardList from '../CardList/CardList';
 import Preloader from '../Preloader/Preloader';
 import { capitalize } from '../../utils/pokemon';
-import { EMPTY_STATE_MESSAGES, VIEW_MODES } from '../../utils/constants';
+import { EMPTY_STATE_MESSAGES, GENERATIONS, VIEW_MODES } from '../../utils/constants';
 import './Home.css';
 
 function Home({
@@ -15,11 +15,13 @@ function Home({
   searchTerm,
   searchQuery,
   activeType,
+  activeGeneration,
   types,
   onSearchTermChange,
   onSearch,
   onClearSearch,
   onSelectType,
+  onSelectGeneration,
   onLoadMore,
   onCardClick,
   isFavorite,
@@ -27,13 +29,16 @@ function Home({
 }) {
   const isFiltered = mode !== VIEW_MODES.BROWSE;
   const showEmptyState = !isLoading && !errorMessage && pokemons.length === 0;
-  const showLoadMore = mode !== VIEW_MODES.SEARCH && hasMore && !isLoading && !errorMessage;
+  const showLoadMore = hasMore && !isLoading && !errorMessage;
 
   let resultsLabel = '';
   if (mode === VIEW_MODES.SEARCH && searchQuery) {
     resultsLabel = `Results for “${searchQuery}”`;
   } else if (mode === VIEW_MODES.TYPE && activeType) {
     resultsLabel = `Type: ${capitalize(activeType)}`;
+  } else if (mode === VIEW_MODES.GENERATION && activeGeneration) {
+    const generation = GENERATIONS.find((item) => String(item.id) === activeGeneration);
+    resultsLabel = generation ? generation.label : '';
   }
 
   return (
@@ -42,7 +47,7 @@ function Home({
         <div className="hero__container container">
           <h1 className="hero__title">Explore the world of Pokémon</h1>
           <p className="hero__subtitle">
-            Search by name or number, filter by type, and save your favorites.
+            Search by name or number, filter by type or generation, and save your favorites.
           </p>
           <SearchForm
             searchTerm={searchTerm}
@@ -50,8 +55,10 @@ function Home({
             onSearch={onSearch}
             onClearSearch={onClearSearch}
             onSelectType={onSelectType}
+            onSelectGeneration={onSelectGeneration}
             types={types}
             activeType={activeType}
+            activeGeneration={activeGeneration}
           />
           {typesError && <p className="hero__notice">{typesError}</p>}
         </div>
