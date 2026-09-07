@@ -42,8 +42,10 @@ function App() {
   const [typesError, setTypesError] = useState('');
   const [selectedPokemon, setSelectedPokemon] = useState(null);
 
-  const { favorites, isFavorite, toggleFavorite } = useFavorites();
   const { currentUser, isLoggedIn, register, login, signOut } = useAuth();
+  const { favorites, isFavorite, toggleFavorite } = useFavorites(
+    currentUser ? currentUser.email : null,
+  );
   const [activeModal, setActiveModal] = useState('');
 
   // Tracks the most recent request so stale responses can be ignored.
@@ -273,6 +275,18 @@ function App() {
     [register],
   );
 
+  // Saving requires an account; prompt sign-in when logged out.
+  const handleToggleFavorite = useCallback(
+    (pokemon) => {
+      if (!isLoggedIn) {
+        setActiveModal('login');
+        return;
+      }
+      toggleFavorite(pokemon);
+    },
+    [isLoggedIn, toggleFavorite],
+  );
+
   return (
     <div className="page">
       <Header
@@ -306,7 +320,7 @@ function App() {
                 onLoadMore={handleLoadMore}
                 onCardClick={handleCardClick}
                 isFavorite={isFavorite}
-                onToggleFavorite={toggleFavorite}
+                onToggleFavorite={handleToggleFavorite}
               />
             }
           />
@@ -315,9 +329,11 @@ function App() {
             element={
               <Favorites
                 favorites={favorites}
+                isLoggedIn={isLoggedIn}
+                onSignInClick={handleOpenLogin}
                 onCardClick={handleCardClick}
                 isFavorite={isFavorite}
-                onToggleFavorite={toggleFavorite}
+                onToggleFavorite={handleToggleFavorite}
               />
             }
           />
@@ -330,7 +346,7 @@ function App() {
         pokemon={selectedPokemon}
         onClose={handleClosePopup}
         isFavorite={isFavorite}
-        onToggleFavorite={toggleFavorite}
+        onToggleFavorite={handleToggleFavorite}
       />
       {activeModal === 'login' && (
         <LoginModal
