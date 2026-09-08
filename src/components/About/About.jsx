@@ -50,7 +50,7 @@ function About() {
         <section className="about__section">
           <h2 className="about__heading">The developer</h2>
           <p className="about__text">
-            Built by a TripleTen student learning full-stack web development. You can view
+            Built by Logan O'Connor, a TripleTen student learning full-stack web development. You can view
             the source code on{' '}
             <a
               className="about__link"

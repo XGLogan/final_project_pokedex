@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
-import Home from '../Home/Home';
+import Main from '../Main/Main';
 import Favorites from '../Favorites/Favorites';
 import About from '../About/About';
 import NotFound from '../NotFound/NotFound';
@@ -390,7 +390,7 @@ function App() {
           <Route
             path="/"
             element={
-              <Home
+              <Main
                 pokemons={pokemons}
                 isLoading={isLoading}
                 errorMessage={errorMessage}

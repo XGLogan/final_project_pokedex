@@ -8,20 +8,35 @@ React frontend + external API).
 <!-- After deploying, replace the link below with your live GitHub Pages URL. -->
 🔗 **Live demo:** `https://<your-username>.github.io/<your-repo>/`
 
+## Project Pitch Video
+
+<!-- After uploading your Loom recording to Google Drive, paste the share link below. -->
+Check out [this video](ADD_LINK_HERE), where I describe my project and some
+challenges I faced while building it.
+
 ## Features
 
-- **Browse** Pokémon in a responsive card grid with **Load more** pagination.
-- **Search** by name or number against the PokeAPI.
-- **Filter** by Pokémon type.
-- **Detail popup** for any Pokémon (artwork, types, base stats, abilities,
-  height, weight). Closes via the ✕ button, clicking the overlay, or pressing
+- **Browse** the whole Pokédex in a responsive card grid with **Show more**
+  paging. Only default Pokédex entries appear in the grid — alternate forms live
+  in the detail popup.
+- **Search** by partial name (`char` → Charmander, Charmeleon, Charizard…) or by
+  Pokédex number, with exact-slug fallback (`rayquaza-mega`).
+- **Filter** by type or by generation (Gen 1–9) — jump straight to any part of
+  the Pokédex.
+- **Detail popup** for any Pokémon: artwork, types, base stats, abilities,
+  height and weight, plus a **form switcher** (Base / Mega / Origin / regional…)
+  when the species has alternate forms. Closes via the ✕ button, the overlay, or
   **Esc**.
-- **Favorites** saved to `localStorage` and shown on a dedicated page — they
-  persist across reloads and browser sessions.
-- **Three routes** (`/`, `/favorites`, `/about`) plus a 404 page, using
-  React Router.
-- Graceful **loading, empty, and error** states.
-- Mobile-first and responsive down to 320px, with no horizontal scrolling.
+- **Sign up / Sign in** modals with client-side validation, built on a reusable
+  `ModalWithForm` component. The header shows a greeting and **Log out** when
+  signed in. *(Authentication is simulated on the frontend for Stage 1 — no
+  server and no passwords are stored.)*
+- **Favorites per account**: saving requires being signed in, each account keeps
+  its own list in `localStorage`, and it comes back when that account signs in
+  again.
+- **Four routes** (`/`, `/favorites`, `/about`, and a 404 page) via React Router.
+- Graceful **loading, empty, and error** states; mobile-first and responsive
+  down to 320px with no horizontal scrolling.
 
 ## Tech stack
 
@@ -39,10 +54,11 @@ and requires no API key. Endpoints used:
 
 | Purpose | Endpoint |
 | --- | --- |
-| Paginated list | `GET /pokemon?limit=&offset=` |
+| Full Pokémon index (names + ids) | `GET /pokemon?limit=2000` |
 | Single Pokémon details | `GET /pokemon/{name-or-id}` |
 | Type list (filter) | `GET /type` |
 | Pokémon by type | `GET /type/{type}` |
+| Species → alternate forms | `GET /pokemon-species/{name}` |
 
 ## Project structure
 
@@ -50,13 +66,14 @@ and requires no API key. Endpoints used:
 src/
 ├─ components/        # one folder per component: <Name>.jsx + <Name>.css
 │  ├─ App/            # owns app state and initiates all API requests
-│  ├─ Header/  Footer/
-│  ├─ SearchForm/
-│  ├─ Card/  CardList/         # Card is reused on Home and Favorites
-│  ├─ PokemonPopup/  Preloader/
-│  └─ Home/  Favorites/  About/  NotFound/
-├─ hooks/             # useFavorites (localStorage-backed)
-├─ utils/             # api.js (Fetch layer), constants.js (ALL_CAPS), pokemon.js
+│  ├─ Header/  Navigation/  Footer/
+│  ├─ Main/           # home page: search, filters, results grid
+│  ├─ SearchForm/  Card/  CardList/  Preloader/
+│  ├─ PokemonPopup/   # detail modal with form switcher
+│  ├─ ModalWithForm/  LoginModal/  RegisterModal/
+│  └─ Favorites/  About/  NotFound/
+├─ hooks/             # useFavorites (per-user, localStorage), useAuth (simulated session)
+├─ utils/             # api.js (Fetch layer), constants.js (ALL_CAPS), pokemon.js, validation.js
 ├─ images/            # SVG icons
 ├─ fonts/             # self-hosted .woff2 + @font-face
 └─ index.css          # design tokens + base styles
@@ -98,4 +115,4 @@ link.
 
 ## Author
 
-Built as a TripleTen Software Engineering final project.
+Built by Logan O'Connor as a TripleTen Software Engineering final project.

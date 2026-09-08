@@ -34,49 +34,6 @@
   color: var(--color-text);
 }
 
-.header__nav {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.header__link {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border-radius: var(--radius-pill);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--color-text-muted);
-  transition: color 0.2s ease, background-color 0.2s ease;
-}
-
-.header__link:hover {
-  color: var(--color-primary);
-  background-color: var(--color-surface-muted);
-}
-
-.header__link_active {
-  color: var(--color-primary);
-  background-color: rgba(238, 21, 21, 0.08);
-}
-
-.header__badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: var(--radius-pill);
-  background-color: var(--color-primary);
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
-}
-
 .header__auth {
   display: flex;
   align-items: center;
@@ -129,9 +86,5 @@
   .header__container {
     padding-top: 16px;
     padding-bottom: 16px;
-  }
-
-  .header__link {
-    font-size: 16px;
   }
 }

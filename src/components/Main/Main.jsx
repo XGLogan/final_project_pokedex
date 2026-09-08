@@ -3,9 +3,9 @@ import CardList from '../CardList/CardList';
 import Preloader from '../Preloader/Preloader';
 import { capitalize } from '../../utils/pokemon';
 import { EMPTY_STATE_MESSAGES, GENERATIONS, VIEW_MODES } from '../../utils/constants';
-import './Home.css';
+import './Main.css';
 
-function Home({
+function Main({
   pokemons,
   isLoading,
   errorMessage,
@@ -113,4 +113,4 @@ function Home({
   );
 }
 
-export default Home;
+export default Main;
