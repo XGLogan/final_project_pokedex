@@ -74,8 +74,8 @@ export const AUTH_MESSAGES = {
 
 export const POKEAPI_HOMEPAGE = 'https://pokeapi.co/';
 
-// Set this to the project's GitHub repository URL (used by the footer and About page).
-export const GITHUB_URL = 'https://github.com/ocplogan';
+// The project's GitHub repository (used by the footer and About page).
+export const GITHUB_URL = 'https://github.com/XGLogan/final_project_pokedex';
 
 export const MAX_STAT_VALUE = 255;
 

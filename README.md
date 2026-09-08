@@ -5,8 +5,8 @@ built with live data from the free [PokeAPI](https://pokeapi.co/). This is the
 **custom** track of the TripleTen Software Engineering final project (Stage 1 —
 React frontend + external API).
 
-<!-- After deploying, replace the link below with your live GitHub Pages URL. -->
-🔗 **Live demo:** `https://<your-username>.github.io/<your-repo>/`
+🔗 **Live demo:** [https://xglogan.github.io/final_project_pokedex/](https://xglogan.github.io/final_project_pokedex/)
+📦 **Source:** [github.com/XGLogan/final_project_pokedex](https://github.com/XGLogan/final_project_pokedex)
 
 ## Project Pitch Video
 
