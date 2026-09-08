@@ -7,7 +7,8 @@ function readCurrentUser() {
     const stored = localStorage.getItem(CURRENT_USER_STORAGE_KEY);
     const parsed = stored ? JSON.parse(stored) : null;
     if (parsed && typeof parsed === 'object' && typeof parsed.email === 'string') {
-      return parsed;
+      const hasName = typeof parsed.name === 'string' && parsed.name.trim().length > 0;
+      return { email: parsed.email, name: hasName ? parsed.name : nameFromEmail(parsed.email) };
     }
     return null;
   } catch {

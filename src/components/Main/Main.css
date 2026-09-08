@@ -55,6 +55,8 @@
 }
 
 .results__title {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 20px;
   font-weight: 700;
 }

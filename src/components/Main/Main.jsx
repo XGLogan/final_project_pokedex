@@ -29,7 +29,8 @@ function Main({
 }) {
   const isFiltered = mode !== VIEW_MODES.BROWSE;
   const showEmptyState = !isLoading && !errorMessage && pokemons.length === 0;
-  const showLoadMore = hasMore && !isLoading && !errorMessage;
+  // Stays visible after a failed page so the user can retry it.
+  const showLoadMore = hasMore && !isLoading;
 
   let resultsLabel = '';
   if (mode === VIEW_MODES.SEARCH && searchQuery) {

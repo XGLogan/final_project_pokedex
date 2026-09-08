@@ -25,6 +25,27 @@ export const GENERATIONS = [
 
 export const OFFICIAL_ARTWORK_KEY = 'official-artwork';
 
+// Pulls the numeric id out of a PokeAPI resource URL like ".../pokemon/25/".
+export const RESOURCE_ID_PATTERN = /\/(\d+)\/?$/;
+
+// "#0025" style labels are padded to this many digits.
+export const ID_PAD_LENGTH = 4;
+
+// Label for a species' default variety in the form switcher.
+export const BASE_FORM_LABEL = 'Base';
+
+// Search queries: a bare number looks up by id; only slug-safe text is sent
+// to the API as an exact-name fallback.
+export const NUMERIC_ID_PATTERN = /^\d+$/;
+export const SLUG_PATTERN = /^[a-z0-9-]+$/;
+
+// Longest Pokémon name is well under this; keeps the results heading tidy.
+export const MAX_SEARCH_LENGTH = 40;
+
+export const HTTP_STATUS = {
+  NOT_FOUND: 404,
+};
+
 export const FAVORITES_STORAGE_KEY = 'pokedex-explorer.favorites';
 
 export const CURRENT_USER_STORAGE_KEY = 'pokedex-explorer.currentUser';
@@ -33,19 +54,32 @@ export const USERS_STORAGE_KEY = 'pokedex-explorer.users';
 
 export const MIN_PASSWORD_LENGTH = 6;
 
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Greeting name for a returning user whose saved name is unknown.
+export const DEFAULT_DISPLAY_NAME = 'Trainer';
+
+export const MODALS = {
+  LOGIN: 'login',
+  REGISTER: 'register',
+};
+
 export const AUTH_MESSAGES = {
   INVALID_EMAIL: 'Enter a valid email address.',
   SHORT_PASSWORD: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
   MISSING_NAME: 'Enter your name.',
+  PASSWORD_PLACEHOLDER: `At least ${MIN_PASSWORD_LENGTH} characters`,
+  DEMO_NOTE: 'Demo sign-in for this project — your password is never stored.',
 };
 
 export const POKEAPI_HOMEPAGE = 'https://pokeapi.co/';
 
+// Set this to the project's GitHub repository URL (used by the footer and About page).
 export const GITHUB_URL = 'https://github.com/ocplogan';
 
 export const MAX_STAT_VALUE = 255;
 
-// The three ways the results grid can be populated.
+// The ways the results grid can be populated.
 export const VIEW_MODES = {
   BROWSE: 'browse',
   SEARCH: 'search',
@@ -63,8 +97,8 @@ const REQUEST_ERROR =
 export const ERROR_MESSAGES = {
   LOAD_FAILED: REQUEST_ERROR,
   SEARCH_FAILED: REQUEST_ERROR,
-  NOT_FOUND: 'Nothing found.',
   TYPES_FAILED: "We couldn't load the type filter, but you can still search and browse.",
+  FORMS_FAILED: "We couldn't load this Pokémon's alternate forms.",
 };
 
 export const EMPTY_STATE_MESSAGES = {
@@ -81,6 +115,10 @@ export const STAT_LABELS = {
   'special-defense': 'Sp. Def',
   speed: 'Speed',
 };
+
+// Fallbacks for a type the palette below doesn't know about.
+export const DEFAULT_TYPE_COLOR = 'var(--color-text-muted)';
+export const DEFAULT_ACCENT_COLOR = 'var(--color-primary)';
 
 export const TYPE_COLORS = {
   normal: '#9099a1',

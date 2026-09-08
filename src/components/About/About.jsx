@@ -15,9 +15,10 @@ function About() {
           <h2 className="about__heading">What it does</h2>
           <p className="about__text">
             Browse Pokémon in a responsive grid, search by name or number, and filter by
-            type. Open any Pokémon to see its artwork, types, base stats, abilities, and
-            size. Save the ones you like — your favorites are stored in your browser and
-            stay there when you come back.
+            type or generation. Open any Pokémon to see its artwork, types, base stats,
+            abilities, and size — and switch between its forms, like Mega or Origin. Sign
+            in (a demo account, no password stored) to save the ones you like; your
+            favorites are kept in your browser and come back whenever you sign in again.
           </p>
         </section>
 

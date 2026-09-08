@@ -1,5 +1,5 @@
 import { capitalize } from '../../utils/pokemon';
-import { GENERATIONS } from '../../utils/constants';
+import { GENERATIONS, MAX_SEARCH_LENGTH } from '../../utils/constants';
 import searchIcon from '../../images/search.svg';
 import closeIcon from '../../images/close.svg';
 import './SearchForm.css';
@@ -48,6 +48,7 @@ function SearchForm({
           value={searchTerm}
           onChange={handleChange}
           aria-label="Search Pokémon by name or number"
+          maxLength={MAX_SEARCH_LENGTH}
           required
         />
         {searchTerm && (

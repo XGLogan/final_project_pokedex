@@ -8,7 +8,9 @@ function checkResponse(res) {
   if (res.ok) {
     return res.json();
   }
-  return Promise.reject(new Error(`Error ${res.status}: ${res.statusText}`));
+  const error = new Error(`Error ${res.status}: ${res.statusText}`);
+  error.status = res.status;
+  return Promise.reject(error);
 }
 
 // The full Pokémon index (names + detail URLs) in a single request.

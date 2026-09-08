@@ -9,7 +9,7 @@ function CardList({ pokemons, onCardClick, isFavorite, onToggleFavorite }) {
           key={pokemon.id}
           pokemon={pokemon}
           onCardClick={onCardClick}
-          isFavorite={isFavorite}
+          isFavorite={isFavorite(pokemon.id)}
           onToggleFavorite={onToggleFavorite}
         />
       ))}

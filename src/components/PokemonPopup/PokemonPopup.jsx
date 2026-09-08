@@ -1,5 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { MAX_STAT_VALUE, STAT_LABELS, TYPE_COLORS } from '../../utils/constants';
+import {
+  DEFAULT_ACCENT_COLOR,
+  DEFAULT_TYPE_COLOR,
+  MAX_STAT_VALUE,
+  STAT_LABELS,
+  TYPE_COLORS,
+} from '../../utils/constants';
 import { capitalize, formatId, formatName } from '../../utils/pokemon';
 import closeIcon from '../../images/close.svg';
 import heartIcon from '../../images/heart.svg';
@@ -7,13 +13,23 @@ import heartFilledIcon from '../../images/heart-filled.svg';
 import placeholderImage from '../../images/pokeball.svg';
 import './PokemonPopup.css';
 
-function PokemonPopup({ pokemon, forms, onSelectForm, onClose, isFavorite, onToggleFavorite }) {
+function PokemonPopup({
+  pokemon,
+  forms,
+  error,
+  isEscDisabled,
+  onSelectForm,
+  onClose,
+  isFavorite,
+  onToggleFavorite,
+}) {
   const isOpen = Boolean(pokemon);
   const closeButtonRef = useRef(null);
   const previousFocusRef = useRef(null);
 
-  // While open: close on Escape, move focus into the dialog, and restore
-  // focus to the trigger on close. The keydown listener is removed on cleanup.
+  // While open: close on Escape (unless another modal is stacked on top),
+  // move focus into the dialog, and restore focus to the trigger on close.
+  // The keydown listener is removed on cleanup.
   useEffect(() => {
     if (!isOpen) {
       return undefined;
@@ -23,7 +39,7 @@ function PokemonPopup({ pokemon, forms, onSelectForm, onClose, isFavorite, onTog
     closeButtonRef.current?.focus();
 
     function handleEscClose(event) {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !isEscDisabled) {
         onClose();
       }
     }
@@ -35,15 +51,15 @@ function PokemonPopup({ pokemon, forms, onSelectForm, onClose, isFavorite, onTog
         previousFocusRef.current.focus();
       }
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isEscDisabled]);
 
   if (!pokemon) {
     return null;
   }
 
-  const favorite = isFavorite(pokemon.id);
+  const isSaved = isFavorite(pokemon.id);
   const primaryType = pokemon.types[0];
-  const primaryColor = TYPE_COLORS[primaryType] || 'var(--color-primary)';
+  const primaryColor = TYPE_COLORS[primaryType] || DEFAULT_ACCENT_COLOR;
 
   function handleOverlayClick(event) {
     if (event.target === event.currentTarget) {
@@ -62,7 +78,7 @@ function PokemonPopup({ pokemon, forms, onSelectForm, onClose, isFavorite, onTog
   }
 
   return (
-    <div className="popup popup_opened" onClick={handleOverlayClick}>
+    <div className="popup" onClick={handleOverlayClick}>
       <div
         className="popup__container"
         role="dialog"
@@ -98,7 +114,7 @@ function PokemonPopup({ pokemon, forms, onSelectForm, onClose, isFavorite, onTog
               <li
                 key={type}
                 className="popup__type"
-                style={{ backgroundColor: TYPE_COLORS[type] || 'var(--color-text-muted)' }}
+                style={{ backgroundColor: TYPE_COLORS[type] || DEFAULT_TYPE_COLOR }}
               >
                 {capitalize(type)}
               </li>
@@ -125,6 +141,12 @@ function PokemonPopup({ pokemon, forms, onSelectForm, onClose, isFavorite, onTog
         </div>
 
         <div className="popup__content">
+          {error && (
+            <p className="popup__error" role="alert">
+              {error}
+            </p>
+          )}
+
           <ul className="popup__meta">
             <li className="popup__meta-item">
               <span className="popup__meta-label">Height</span>
@@ -172,17 +194,17 @@ function PokemonPopup({ pokemon, forms, onSelectForm, onClose, isFavorite, onTog
 
           <button
             type="button"
-            className={`popup__favorite ${favorite ? 'popup__favorite_active' : ''}`}
+            className={`popup__favorite ${isSaved ? 'popup__favorite_active' : ''}`}
             onClick={handleToggleFavorite}
-            aria-pressed={favorite}
+            aria-pressed={isSaved}
           >
             <img
-              src={favorite ? heartFilledIcon : heartIcon}
+              src={isSaved ? heartFilledIcon : heartIcon}
               alt=""
               aria-hidden="true"
               className="popup__favorite-icon"
             />
-            {favorite ? 'Remove from favorites' : 'Add to favorites'}
+            {isSaved ? 'Remove from favorites' : 'Add to favorites'}
           </button>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Navigation from '../Navigation/Navigation';
 import logo from '../../images/pokeball.svg';
 import './Header.css';
@@ -14,10 +14,10 @@ function Header({
   return (
     <header className="header">
       <div className="header__container container">
-        <NavLink to="/" className="header__brand">
+        <Link to="/" className="header__brand">
           <img src={logo} alt="" aria-hidden="true" className="header__logo" />
           <span className="header__title">Pokédex Explorer</span>
-        </NavLink>
+        </Link>
 
         <Navigation favoritesCount={favoritesCount} />
 

@@ -18,13 +18,17 @@ import {
   getPokemonSpecies,
   getTypes,
 } from '../../utils/api';
-import { formLabel, idFromUrl, normalizePokemon } from '../../utils/pokemon';
+import { formLabel, idFromUrl, normalizePokemon, toSearchSlug } from '../../utils/pokemon';
 import {
   ERROR_MESSAGES,
   EXCLUDED_TYPES,
   FORM_ID_THRESHOLD,
   GENERATIONS,
+  HTTP_STATUS,
+  MODALS,
+  NUMERIC_ID_PATTERN,
   PAGE_SIZE,
+  SLUG_PATTERN,
   VIEW_MODES,
 } from '../../utils/constants';
 import './App.css';
@@ -55,6 +59,7 @@ function App() {
   const [typesError, setTypesError] = useState('');
   const [selectedPokemon, setSelectedPokemon] = useState(null);
   const [forms, setForms] = useState([]);
+  const [popupError, setPopupError] = useState('');
 
   const { currentUser, isLoggedIn, register, login, signOut } = useAuth();
   const { favorites, isFavorite, toggleFavorite } = useFavorites(
@@ -69,13 +74,20 @@ function App() {
   // Separate token for popup/form requests.
   const popupRequestIdRef = useRef(0);
 
-  // Fetch details for a list of entries. A single failed detail is skipped
-  // rather than discarding the whole page.
+  // Fetch details for a list of entries. A single failed detail is skipped,
+  // but if every request in the batch fails the batch itself fails so the
+  // user sees an error instead of an empty grid.
   const loadDetailsFor = useCallback(
     (entries) =>
       Promise.all(
         entries.map((entry) => getPokemonByName(entry.name).catch(() => null)),
-      ).then((rawList) => rawList.filter(Boolean).map(normalizePokemon)),
+      ).then((rawList) => {
+        const detailed = rawList.filter(Boolean).map(normalizePokemon);
+        if (entries.length > 0 && detailed.length === 0) {
+          throw new Error('All detail requests failed');
+        }
+        return detailed;
+      }),
     [],
   );
 
@@ -114,20 +126,34 @@ function App() {
 
   // Load the Pokémon index and the type list once on mount.
   useEffect(() => {
+    let ignore = false;
+
     getAllPokemon()
       .then((data) => {
+        if (ignore) {
+          return;
+        }
         const entries = toDefaultEntries(data.results);
         setAllPokemon(entries);
-        showPool(entries);
+        // Don't replace a search the user already started while the index loaded.
+        if (requestIdRef.current === 0) {
+          showPool(entries);
+        }
       })
       .catch((error) => {
         console.error(error);
+        if (ignore) {
+          return;
+        }
         setErrorMessage(ERROR_MESSAGES.LOAD_FAILED);
         setIsLoading(false);
       });
 
     getTypes()
       .then((data) => {
+        if (ignore) {
+          return;
+        }
         const typeNames = data.results
           .map((item) => item.name)
           .filter((name) => !EXCLUDED_TYPES.includes(name));
@@ -135,9 +161,38 @@ function App() {
       })
       .catch((error) => {
         console.error(error);
+        if (ignore) {
+          return;
+        }
         setTypesError(ERROR_MESSAGES.TYPES_FAILED);
       });
+
+    return () => {
+      ignore = true;
+    };
   }, [showPool]);
+
+  // Start a fresh grid request: invalidate in-flight ones and reset the grid.
+  function beginGridRequest() {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    setPool([]);
+    setLoadedCount(0);
+    setPokemons([]);
+    setIsLoading(true);
+    setErrorMessage('');
+    return requestId;
+  }
+
+  // Shared failure handling for grid requests (ignores stale responses).
+  function failGridRequest(requestId, error, message) {
+    console.error(error);
+    if (requestId !== requestIdRef.current) {
+      return;
+    }
+    setErrorMessage(message);
+    setIsLoading(false);
+  }
 
   // Return to the default browse view.
   const handleClearSearch = useCallback(() => {
@@ -157,31 +212,31 @@ function App() {
       return;
     }
 
-    const normalizedQuery = trimmedQuery.toLowerCase();
+    const slug = toSearchSlug(trimmedQuery);
     setMode(VIEW_MODES.SEARCH);
     setActiveType('');
     setActiveGeneration('');
     setSearchQuery(trimmedQuery);
 
-    const isNumber = /^\d+$/.test(normalizedQuery);
+    const isNumber = NUMERIC_ID_PATTERN.test(slug);
     const matches = allPokemon.filter((entry) =>
-      isNumber ? entry.id === Number(normalizedQuery) : entry.name.includes(normalizedQuery),
+      isNumber ? entry.id === Number(slug) : entry.name.includes(slug),
     );
     if (matches.length > 0) {
       showPool(matches);
       return;
     }
 
-    // Fallback for exact slugs the index doesn't list (e.g. "rayquaza-mega").
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    setPool([]);
-    setLoadedCount(0);
-    setPokemons([]);
-    setIsLoading(true);
-    setErrorMessage('');
+    // No index match: an empty pool renders the "Nothing found." state. Only
+    // slug-safe text can be an exact name the index doesn't list (e.g.
+    // "rayquaza-mega"); anything else is simply not found.
+    const requestId = beginGridRequest();
+    if (!SLUG_PATTERN.test(slug)) {
+      setIsLoading(false);
+      return;
+    }
 
-    getPokemonByName(normalizedQuery)
+    getPokemonByName(slug)
       .then((raw) => {
         if (requestId !== requestIdRef.current) {
           return;
@@ -193,13 +248,14 @@ function App() {
         setIsLoading(false);
       })
       .catch((error) => {
-        console.error(error);
-        if (requestId !== requestIdRef.current) {
+        if (error.status === HTTP_STATUS.NOT_FOUND) {
+          // A miss is not an error: leave the grid empty with no message.
+          if (requestId === requestIdRef.current) {
+            setIsLoading(false);
+          }
           return;
         }
-        const isNotFound = String(error.message).includes('404');
-        setErrorMessage(isNotFound ? ERROR_MESSAGES.NOT_FOUND : ERROR_MESSAGES.SEARCH_FAILED);
-        setIsLoading(false);
+        failGridRequest(requestId, error, ERROR_MESSAGES.SEARCH_FAILED);
       });
   }
 
@@ -216,14 +272,7 @@ function App() {
     setSearchTerm('');
     setSearchQuery('');
 
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    setPool([]);
-    setLoadedCount(0);
-    setPokemons([]);
-    setIsLoading(true);
-    setErrorMessage('');
-
+    const requestId = beginGridRequest();
     getPokemonByType(type)
       .then((data) => {
         if (requestId !== requestIdRef.current) {
@@ -231,14 +280,7 @@ function App() {
         }
         showPool(toDefaultEntries(data.pokemon.map((entry) => entry.pokemon)));
       })
-      .catch((error) => {
-        console.error(error);
-        if (requestId !== requestIdRef.current) {
-          return;
-        }
-        setErrorMessage(ERROR_MESSAGES.LOAD_FAILED);
-        setIsLoading(false);
-      });
+      .catch((error) => failGridRequest(requestId, error, ERROR_MESSAGES.LOAD_FAILED));
   }
 
   // Filter the grid by generation (a Pokédex number range).
@@ -263,7 +305,8 @@ function App() {
     );
   }
 
-  // Append the next page of the current pool.
+  // Append the next page of the current pool. On failure the page is not
+  // marked as loaded, so pressing "Show more" again retries it.
   function handleLoadMore() {
     const nextEntries = pool.slice(loadedCount, loadedCount + PAGE_SIZE);
     if (nextEntries.length === 0) {
@@ -284,14 +327,7 @@ function App() {
         setLoadedCount(loadedCount + nextEntries.length);
         setIsLoading(false);
       })
-      .catch((error) => {
-        console.error(error);
-        if (requestId !== requestIdRef.current) {
-          return;
-        }
-        setErrorMessage(ERROR_MESSAGES.LOAD_FAILED);
-        setIsLoading(false);
-      });
+      .catch((error) => failGridRequest(requestId, error, ERROR_MESSAGES.LOAD_FAILED));
   }
 
   const handleCardClick = useCallback((pokemon) => {
@@ -299,6 +335,7 @@ function App() {
     popupRequestIdRef.current = requestId;
     setSelectedPokemon(pokemon);
     setForms([]);
+    setPopupError('');
 
     // Look up the species to see if it has alternate forms (mega, origin, etc.).
     getPokemonSpecies(pokemon.speciesName)
@@ -318,12 +355,17 @@ function App() {
       })
       .catch((error) => {
         console.error(error);
+        if (requestId !== popupRequestIdRef.current) {
+          return;
+        }
+        setPopupError(ERROR_MESSAGES.FORMS_FAILED);
       });
   }, []);
 
   const handleSelectForm = useCallback((varietyName) => {
     const requestId = popupRequestIdRef.current + 1;
     popupRequestIdRef.current = requestId;
+    setPopupError('');
 
     getPokemonByName(varietyName)
       .then((raw) => {
@@ -334,6 +376,10 @@ function App() {
       })
       .catch((error) => {
         console.error(error);
+        if (requestId !== popupRequestIdRef.current) {
+          return;
+        }
+        setPopupError(ERROR_MESSAGES.LOAD_FAILED);
       });
   }, []);
 
@@ -341,10 +387,11 @@ function App() {
     popupRequestIdRef.current += 1;
     setSelectedPokemon(null);
     setForms([]);
+    setPopupError('');
   }, []);
 
-  const handleOpenLogin = useCallback(() => setActiveModal('login'), []);
-  const handleOpenRegister = useCallback(() => setActiveModal('register'), []);
+  const handleOpenLogin = useCallback(() => setActiveModal(MODALS.LOGIN), []);
+  const handleOpenRegister = useCallback(() => setActiveModal(MODALS.REGISTER), []);
   const handleCloseModal = useCallback(() => setActiveModal(''), []);
 
   const handleLogin = useCallback(
@@ -367,7 +414,7 @@ function App() {
   const handleToggleFavorite = useCallback(
     (pokemon) => {
       if (!isLoggedIn) {
-        setActiveModal('login');
+        setActiveModal(MODALS.LOGIN);
         return;
       }
       toggleFavorite(pokemon);
@@ -435,19 +482,21 @@ function App() {
       <PokemonPopup
         pokemon={selectedPokemon}
         forms={forms}
+        error={popupError}
+        isEscDisabled={activeModal !== ''}
         onSelectForm={handleSelectForm}
         onClose={handleClosePopup}
         isFavorite={isFavorite}
         onToggleFavorite={handleToggleFavorite}
       />
-      {activeModal === 'login' && (
+      {activeModal === MODALS.LOGIN && (
         <LoginModal
           onClose={handleCloseModal}
           onLogin={handleLogin}
           onSwitchToRegister={handleOpenRegister}
         />
       )}
-      {activeModal === 'register' && (
+      {activeModal === MODALS.REGISTER && (
         <RegisterModal
           onClose={handleCloseModal}
           onRegister={handleRegister}

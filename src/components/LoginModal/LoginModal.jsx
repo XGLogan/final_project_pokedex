@@ -2,6 +2,7 @@ import { useState } from 'react';
 import ModalWithForm from '../ModalWithForm/ModalWithForm';
 import { isValidEmail } from '../../utils/validation';
 import { AUTH_MESSAGES, MIN_PASSWORD_LENGTH } from '../../utils/constants';
+import './LoginModal.css';
 
 function LoginModal({ onClose, onLogin, onSwitchToRegister }) {
   const [email, setEmail] = useState('');
@@ -61,6 +62,8 @@ function LoginModal({ onClose, onLogin, onSwitchToRegister }) {
           <span className="modal__error">{AUTH_MESSAGES.SHORT_PASSWORD}</span>
         )}
       </label>
+
+      <p className="login-modal__note">{AUTH_MESSAGES.DEMO_NOTE}</p>
     </ModalWithForm>
   );
 }

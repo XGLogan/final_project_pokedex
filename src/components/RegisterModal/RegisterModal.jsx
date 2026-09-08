@@ -2,6 +2,7 @@ import { useState } from 'react';
 import ModalWithForm from '../ModalWithForm/ModalWithForm';
 import { isValidEmail } from '../../utils/validation';
 import { AUTH_MESSAGES, MIN_PASSWORD_LENGTH } from '../../utils/constants';
+import './RegisterModal.css';
 
 function RegisterModal({ onClose, onRegister, onSwitchToLogin }) {
   const [name, setName] = useState('');
@@ -68,7 +69,7 @@ function RegisterModal({ onClose, onRegister, onSwitchToLogin }) {
           className="modal__input"
           type="password"
           name="password"
-          placeholder="At least 6 characters"
+          placeholder={AUTH_MESSAGES.PASSWORD_PLACEHOLDER}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           autoComplete="new-password"
@@ -79,6 +80,8 @@ function RegisterModal({ onClose, onRegister, onSwitchToLogin }) {
           <span className="modal__error">{AUTH_MESSAGES.SHORT_PASSWORD}</span>
         )}
       </label>
+
+      <p className="register-modal__note">{AUTH_MESSAGES.DEMO_NOTE}</p>
     </ModalWithForm>
   );
 }

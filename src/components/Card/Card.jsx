@@ -1,14 +1,14 @@
 import { memo } from 'react';
 import { capitalize, formatId, formatName } from '../../utils/pokemon';
-import { TYPE_COLORS } from '../../utils/constants';
+import { DEFAULT_TYPE_COLOR, TYPE_COLORS } from '../../utils/constants';
 import heartIcon from '../../images/heart.svg';
 import heartFilledIcon from '../../images/heart-filled.svg';
 import placeholderImage from '../../images/pokeball.svg';
 import './Card.css';
 
+// `isFavorite` is a plain boolean so memo() only re-renders the card whose
+// saved state actually changed.
 function Card({ pokemon, onCardClick, isFavorite, onToggleFavorite }) {
-  const favorite = isFavorite(pokemon.id);
-
   function handleOpen() {
     onCardClick(pokemon);
   }
@@ -28,17 +28,17 @@ function Card({ pokemon, onCardClick, isFavorite, onToggleFavorite }) {
       <article className="card__inner">
         <button
           type="button"
-          className={`card__favorite ${favorite ? 'card__favorite_active' : ''}`}
+          className={`card__favorite ${isFavorite ? 'card__favorite_active' : ''}`}
           onClick={handleToggleFavorite}
-          aria-pressed={favorite}
+          aria-pressed={isFavorite}
           aria-label={
-            favorite
+            isFavorite
               ? `Remove ${formatName(pokemon.name)} from favorites`
               : `Add ${formatName(pokemon.name)} to favorites`
           }
         >
           <img
-            src={favorite ? heartFilledIcon : heartIcon}
+            src={isFavorite ? heartFilledIcon : heartIcon}
             alt=""
             aria-hidden="true"
             className="card__favorite-icon"
@@ -69,7 +69,7 @@ function Card({ pokemon, onCardClick, isFavorite, onToggleFavorite }) {
             <li
               key={type}
               className="card__type"
-              style={{ backgroundColor: TYPE_COLORS[type] || 'var(--color-text-muted)' }}
+              style={{ backgroundColor: TYPE_COLORS[type] || DEFAULT_TYPE_COLOR }}
             >
               {capitalize(type)}
             </li>

@@ -50,7 +50,7 @@ function ModalWithForm({
   }
 
   return (
-    <div className="modal modal_opened" onClick={handleOverlayClick}>
+    <div className="modal" onClick={handleOverlayClick}>
       <div className="modal__container" role="dialog" aria-modal="true" aria-label={title}>
         <button
           type="button"
