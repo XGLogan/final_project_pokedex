@@ -107,7 +107,7 @@
 .search-form__filter-label {
   font-size: 14px;
   font-weight: 500;
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .search-form__select {
