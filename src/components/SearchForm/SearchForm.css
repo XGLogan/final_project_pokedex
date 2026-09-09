@@ -1,0 +1,127 @@
+.search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.search-form__field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 44px;
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-form__field:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(238, 21, 21, 0.12);
+}
+
+.search-form__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+}
+
+.search-form__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 0;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  color: var(--color-text);
+}
+
+.search-form__input:focus {
+  outline: none;
+}
+
+.search-form__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.search-form__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--color-surface-muted);
+}
+
+.search-form__clear:hover {
+  background-color: var(--color-border);
+}
+
+.search-form__clear-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.search-form__submit {
+  flex: 0 0 auto;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.search-form__submit:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.search-form__filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 24px;
+}
+
+.search-form__filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.search-form__filter-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.search-form__select {
+  padding: 10px 14px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.search-form__select:focus-visible {
+  border-color: var(--color-primary);
+}

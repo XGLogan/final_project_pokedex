@@ -1,0 +1,64 @@
+.about {
+  padding-top: 32px;
+}
+
+.about__container {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 760px;
+}
+
+.about__title {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.about__lead {
+  font-size: 18px;
+  color: var(--color-text-muted);
+}
+
+.about__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.about__heading {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.about__text {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.about__link {
+  color: var(--color-primary);
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.about__link:hover {
+  color: var(--color-primary-dark);
+}
+
+.about__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 20px;
+  list-style: disc;
+}
+
+.about__list-item {
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  .about__title {
+    font-size: 34px;
+  }
+}
