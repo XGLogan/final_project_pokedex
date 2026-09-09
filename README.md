@@ -10,8 +10,7 @@ React frontend + external API).
 
 ## Project Pitch Video
 
-<!-- After uploading your Loom recording to Google Drive, paste the share link below. -->
-Check out [this video](ADD_LINK_HERE), where I describe my project and some
+Check out [this video](https://drive.google.com/file/d/13__mD4Uxp0Wi9GG-FUsK4EjE9EfRBBuZ/view?usp=drive_link), where I describe my project and some
 challenges I faced while building it.
 
 ## Features
